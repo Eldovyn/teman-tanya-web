@@ -2,42 +2,19 @@
 import {
     Sidebar,
     SidebarContent,
+    SidebarFooter,
     SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { CiChat1 } from 'vue-icons-lib/ci'
-
-const items = [
-    {
-        title: "New Chat",
-        url: "#",
-        icon: CiChat1,
-    },
-];
+    SidebarHeader,
+} from '@/components/ui/sidebar'
 </script>
 
 <template>
     <Sidebar>
+        <SidebarHeader />
         <SidebarContent>
-            <SidebarGroup>
-                <SidebarGroupLabel>Chaty</SidebarGroupLabel>
-                <SidebarGroupContent>
-                    <SidebarMenu>
-                        <SidebarMenuItem v-for="item in items" :key="item.title">
-                            <SidebarMenuButton asChild>
-                                <a :href="item.url">
-                                    <component :is="item.icon" />
-                                    <span>{{ item.title }}</span>
-                                </a>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroupContent>
-            </SidebarGroup>
+            <SidebarGroup />
+            <SidebarGroup />
         </SidebarContent>
+        <SidebarFooter />
     </Sidebar>
 </template>
