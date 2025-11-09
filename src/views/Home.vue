@@ -15,7 +15,7 @@ const isLogin = ref(false)
         <Button type="submit" class="bg-blue-600 hover:bg-blue-700 cursor-pointer w-20">Sign Up</Button>
     </div>
     <div class="flex flex-col gap-5 items-center justify-center h-screen">
-        <h1 class="text-3xl font-bold text-center">Welcome Back To Chaty</h1>
+        <h1 class="text-3xl font-bold text-center">Welcome Back To Teman Tanya</h1>
         <Textarea class="w-[60%]" placeholder="ask me anything" />
     </div>
 </template>

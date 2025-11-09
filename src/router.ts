@@ -5,6 +5,7 @@ import Home from './views/Home.vue'
 import AccountActive from './views/auth/Account-Active.vue'
 import { useCookies } from 'vue3-cookies'
 import { authService } from './services/authService'
+import { userService } from './services/userService'
 
 const routes = [
     { path: '/register', component: Register, meta: { sidebar: false } },
@@ -21,6 +22,7 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
     const { cookies } = useCookies()
     const accessToken = cookies.get('access_token')
+    const clientETag = cookies.get("me-etag")
     const token = to.query.token as string | undefined
 
     if (to.meta.requiresAuth && !accessToken || accessToken === 'undefined') {
@@ -43,6 +45,33 @@ router.beforeEach(async (to, from, next) => {
             }
         } catch (err) {
             return next('/login')
+        }
+    }
+
+    if (to.path === '/') {
+        const headers: Record<string, string> = {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+        };
+        if (clientETag) headers["If-None-Match"] = clientETag;
+
+
+        const { response } = await userService.getUserMe(accessToken, clientETag)
+
+        if (response.status === 200) {
+            const newETag = response.headers["etag"];
+
+            if (newETag) {
+                cookies.set("me-etag", newETag);
+                cookies.set("me-data", JSON.stringify(response.data));
+            }
+        } else if (response.status === 429) {
+            // 
+        } else if (response.status === 401) {
+            cookies.remove('access_token')
+        } else if (response.status !== 304) {
+            cookies.remove("accessToken");
+            cookies.remove("me-etag");
         }
     }
 
