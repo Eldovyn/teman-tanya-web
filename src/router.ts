@@ -8,7 +8,7 @@ import Testing from './views/Testing.vue'
 import Testing1 from './views/Testing1.vue'
 
 const routes = [
-    { path: '/', component: Home, meta: { sidebar: true, requiresAuth: true } },
+    { path: '/', component: Home, meta: { sidebar: false, requiresAuth: true } },
     { path: '/login', component: Login, meta: { sidebar: false } },
     { path: '/register', component: Register, meta: { sidebar: false } },
     { path: '/test', component: Testing },

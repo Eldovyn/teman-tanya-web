@@ -3,6 +3,7 @@ import AppSidebar from '@/components/AppSidebar.vue'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
+import 'prismjs/themes/prism.css'
 
 const route = useRoute()
 const hasSidebar = computed(() => route.meta.sidebar === true)
