@@ -4,15 +4,11 @@ import Login from './views/auth/Login.vue'
 import Register from './views/auth/Register.vue'
 import { useCookies } from 'vue3-cookies'
 import { userService } from './services/userService'
-import Testing from './views/Testing.vue'
-import Testing1 from './views/Testing1.vue'
 
 const routes = [
     { path: '/', component: Home, meta: { sidebar: false, requiresAuth: true } },
     { path: '/login', component: Login, meta: { sidebar: false } },
     { path: '/register', component: Register, meta: { sidebar: false } },
-    { path: '/test', component: Testing },
-    { path: '/test1', component: Testing1 },
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
