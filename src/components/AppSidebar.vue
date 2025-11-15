@@ -13,19 +13,63 @@ import {
 import Separator from "./ui/separator/Separator.vue";
 import { BxSolidExit } from 'vue-icons-lib/bx'
 import { BxSolidChat } from 'vue-icons-lib/bx'
+import { useCookies } from "@/composables/useCookies";
+import { onMounted, onBeforeUnmount, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { io } from "socket.io-client";
+import { useGetAllRoom } from "@/services/room/useGetAllRoom";
+
+const roomChat = ref<RoomChat[]>([]);
+
+const cookies = useCookies();
+const accessToken = cookies.get("access_token") || "";
+
+const { data: dataAllRoom } = useGetAllRoom(accessToken);
+
+watch(
+    () => dataAllRoom.value,
+    (val) => {
+        roomChat.value = val?.data || [];
+        console.log("dataAllRoom updated:", val?.data);
+    },
+    { immediate: true }
+);
+
+const router = useRoute();
+
+const initialRoom = router.query.room || "";
+
+const socket = io(`${import.meta.env.VITE_API_URL}/chat-bot`, {
+    path: "/socket.io",
+    autoConnect: true,
+    auth: {
+        token: accessToken,
+        room: initialRoom,
+    },
+});
+if (!socket) {
+    throw new Error('Socket not provided');
+}
+
+onMounted(() => {
+    socket.on('connect', () => {
+        console.log('socket connected (setup)');
+    });
+    socket.on('rooms_updated', (data: RoomChat) => {
+        roomChat.value = [data];
+    });
+});
+
+onBeforeUnmount(() => {
+    socket.off('connect');
+    socket.off('validation');
+});
 
 const items = [
     {
         title: "New Chat",
-        url: "#",
+        url: "/",
         icon: BxSolidChat,
-    },
-];
-
-const roomChat = [
-    {
-        title: "Room Chat",
-        url: "#",
     },
 ];
 </script>
@@ -53,7 +97,7 @@ const roomChat = [
                     <SidebarMenu>
                         <SidebarMenuItem v-for="item in roomChat" :key="item.title">
                             <SidebarMenuButton asChild>
-                                <a :href="item.url" class="flex gap-5">
+                                <a :href="`?room=${item.title}`" class="flex gap-5">
                                     <span>{{ item.title }}</span>
                                 </a>
                             </SidebarMenuButton>

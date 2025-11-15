@@ -6,7 +6,7 @@ import { useCookies } from 'vue3-cookies'
 import { userService } from './services/userService'
 
 const routes = [
-    { path: '/', component: Home, meta: { sidebar: false, requiresAuth: true } },
+    { path: '/', component: Home, meta: { sidebar: true, requiresAuth: true } },
     { path: '/login', component: Login, meta: { sidebar: false } },
     { path: '/register', component: Register, meta: { sidebar: false } },
 ]

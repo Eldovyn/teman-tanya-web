@@ -67,3 +67,16 @@ declare interface ErrorResponse {
         [field: string]: string[];
     };
 }
+
+declare interface RoomChat {
+    id: string;
+    created_at: Date;
+    updated_at: Date;
+    deleted_at: Date | null;
+    title: string;
+}
+
+declare interface GetAllRoomResponse {
+    message: string;
+    data: RoomChat[] | [];
+}

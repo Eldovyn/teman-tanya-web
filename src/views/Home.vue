@@ -5,6 +5,14 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from "v
 import { VueMarkdown } from "@crazydos/vue-markdown";
 import remarkGfm from "remark-gfm";
 import { BxSolidSend } from 'vue-icons-lib/bx'
+import { useCookies } from '@/composables/useCookies';
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
+
+const coockies = useCookies()
+
+const accessToken = coockies.get("access_token") || "";
 
 type Msg = { role: "system" | "assistant" | "user"; text: string; ts?: number };
 
@@ -17,7 +25,10 @@ const NAMESPACE = "/chat-bot";
 const socket = io(NS_BASE + NAMESPACE, {
     path: "/socket.io",
     autoConnect: true,
-    auth: initialRoom ? { room: initialRoom } : undefined,
+    auth: {
+        token: accessToken,
+        room: initialRoom,
+    },
 });
 
 const currentRoom = ref<string>(initialRoom);
@@ -52,12 +63,19 @@ function bindEvents() {
     });
 
     socket.on("disconnect", () => {
+        coockies.remove("access_token");
         state.isConnected = false;
+        router.push('/login')
     });
 
     socket.on("room_created", (payload: any) => {
         const roomId = (payload && payload.room) ? String(payload.room) : "";
         if (roomId && !currentRoom.value) setRoomInUrl(roomId);
+    });
+
+    socket.on("rooms_updated", (payload) => {
+        console.log("rooms_updated:", payload.rooms);
+        // update sidebar / list room di UI
     });
 
     socket.on("chat", (payload: any) => {
