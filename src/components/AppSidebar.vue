@@ -11,7 +11,7 @@ import {
     SidebarFooter,
 } from "@/components/ui/sidebar"
 import Separator from "./ui/separator/Separator.vue";
-import { BxSolidExit, BxSolidChat } from 'vue-icons-lib/bx'
+import { BxSolidExit, BxSolidChat, BxRegularUserCircle } from 'vue-icons-lib/bx'
 import { useCookies } from "@/composables/useCookies";
 import { ref, watch } from "vue";
 import { useGetAllRoom } from "@/services/room/useGetAllRoom";
@@ -29,6 +29,14 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog'
+import Label from "./ui/label/Label.vue";
 
 const router = useRouter();
 
@@ -123,6 +131,37 @@ const items = [
                     </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent class="translate-y-[-3%] shadow-none w-[220px]! min-w-0!">
+                    <Dialog>
+                        <DropdownMenuItem @select.prevent>
+                            <DialogTrigger as-child>
+                                <button class="flex gap-2 items-center cursor-pointer" type="button">
+                                    <BxRegularUserCircle class="w-4 h-4 me-2" />
+                                    <span>Account</span>
+                                </button>
+                            </DialogTrigger>
+                        </DropdownMenuItem>
+
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Account Information</DialogTitle>
+                            </DialogHeader>
+                            <Separator />
+                            <div class="flex flex-col gap-5">
+                                <div class="flex flex-col gap-2">
+                                    <Label>Username</Label>
+                                    <div class="flex flex-row gap-2 items-center border rounded-md p-2">
+                                        {{ userMe?.data?.username }}
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <Label>Email</Label>
+                                    <div class="flex flex-row gap-2 items-center border rounded-md p-2">
+                                        {{ userMe?.data?.email }}
+                                    </div>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                     <DropdownMenuItem @click="onLogout" class="cursor-pointer">
                         <BxSolidExit class="w-4 h-4 me-2" />
                         <span>Logout</span>
