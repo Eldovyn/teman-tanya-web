@@ -37,6 +37,8 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog'
 import Label from "./ui/label/Label.vue";
+import { AiOutlineDelete } from 'vue-icons-lib/ai'
+import { RoomService } from '@/services/roomService';
 
 const router = useRouter();
 
@@ -62,6 +64,13 @@ const onLogout = () => {
     cookies.remove("me-data");
     cookies.remove("me-etag");
     router.push("/login");
+};
+
+const onClearRooms = async () => {
+    const { response } = await RoomService.deleteAllRoom(accessToken);
+    if (response.status === 201) {
+        router.go(0);
+    }
 };
 
 
@@ -162,6 +171,10 @@ const items = [
                             </div>
                         </DialogContent>
                     </Dialog>
+                    <DropdownMenuItem @click="onClearRooms" class="cursor-pointer">
+                        <AiOutlineDelete class="w-4 h-4 me-2" />
+                        <span>Clear Rooms</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem @click="onLogout" class="cursor-pointer">
                         <BxSolidExit class="w-4 h-4 me-2" />
                         <span>Logout</span>
