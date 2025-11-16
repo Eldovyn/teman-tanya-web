@@ -39,10 +39,9 @@ import {
 import Label from "./ui/label/Label.vue";
 import { AiOutlineDelete } from 'vue-icons-lib/ai'
 import { RoomService } from '@/services/roomService';
+import { roomChat } from "@/stores/roomChatStore";
 
 const router = useRouter();
-
-const roomChat = ref<RoomChat[]>([]);
 
 const cookies = useCookies();
 const accessToken = cookies.get("access_token") || "";
@@ -107,7 +106,7 @@ const items = [
                         <SidebarGroupLabel>Room Chat</SidebarGroupLabel>
                         <SidebarMenuItem v-for="item in roomChat" :key="item.title">
                             <SidebarMenuButton asChild>
-                                <a :href="`?room=${item.title}`" class="flex gap-5">
+                                <a :href="`?room=${item.room}`" class="flex gap-5">
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger class="min-w-[30ch] max-w-[30ch] truncate">

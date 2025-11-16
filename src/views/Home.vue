@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import { BxSolidSend } from 'vue-icons-lib/bx'
 import { useCookies } from '@/composables/useCookies';
 import { useRouter } from 'vue-router';
+import { roomChat } from '@/stores/roomChatStore';
 
 const router = useRouter()
 
@@ -71,6 +72,10 @@ function bindEvents() {
     socket.on("room_created", (payload: any) => {
         const roomId = (payload && payload.room) ? String(payload.room) : "";
         if (roomId && !currentRoom.value) setRoomInUrl(roomId);
+    });
+
+    socket.on("rooms_updated", (payload: { rooms: RoomChat[] }) => {
+        roomChat.value = payload.rooms || [];
     });
 
     socket.on("chat", (payload: any) => {

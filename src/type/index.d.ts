@@ -74,6 +74,7 @@ declare interface RoomChat {
     updated_at: Date;
     deleted_at: Date | null;
     title: string;
+    room: string;
 }
 
 declare interface GetAllRoomResponse {
