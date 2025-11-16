@@ -206,8 +206,10 @@ const onSubmit = () => {
                             @input="onPasswordInput" :class="{ 'border border-red-500': isPasswordError }" />
                         <button type="button"
                             class="absolute inset-y-0 right-3 flex items-center text-gray-500 cursor-pointer">
-                            <AiOutlineEye @click="togglePassword" v-if="!showPassword" class="w-4 h-4" />
-                            <AiOutlineEyeInvisible @click="togglePassword" v-else class="w-4 h-4" />
+                            <AiOutlineEye @click="togglePassword" v-if="!showPassword"
+                                :class="{ 'w-4 h-4': true, 'text-red-500': isPasswordError }" />
+                            <AiOutlineEyeInvisible @click="togglePassword" v-else
+                                :class="{ 'w-4 h-4': true, 'text-red-500': isPasswordError }" />
                         </button>
                     </div>
                     <p v-if="isPasswordError" class="text-[10px] text-right me-3 text-[#C10007]">
