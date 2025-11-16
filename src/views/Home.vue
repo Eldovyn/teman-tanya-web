@@ -30,8 +30,7 @@ const socket = io(NS_BASE + NAMESPACE, {
     },
 });
 
-const currentRoom = ref<string>(initialRoom);
-
+const currentRoom = ref<string>(initialRoom || "");
 const state = reactive({ isConnected: false, items: [] as Msg[], socketId: "" });
 const text = ref("");
 const listRef = ref<HTMLElement | null>(null);
@@ -39,12 +38,15 @@ const listRef = ref<HTMLElement | null>(null);
 const isConnected = computed(() => state.isConnected);
 const items = computed(() => state.items);
 
-const formatTs = (ts?: number) => new Date(ts ?? Date.now()).toLocaleString();
+const formatTs = (ts?: string | number) =>
+    new Date(ts || Date.now()).toLocaleString();
 
 async function pushMsg(m: Msg) {
     state.items.push(m);
     await nextTick();
-    if (listRef.value) listRef.value.scrollTop = listRef.value.scrollHeight;
+    if (listRef.value) {
+        listRef.value.scrollTop = listRef.value.scrollHeight;
+    }
 }
 
 function setRoomInUrl(roomId: string) {
@@ -56,43 +58,67 @@ function setRoomInUrl(roomId: string) {
 }
 
 function bindEvents() {
+    // CONNECTED
     socket.on("connect", () => {
         state.isConnected = true;
         state.socketId = socket.id ?? "";
     });
 
+    // DISCONNECTED → auto logout
     socket.on("disconnect", () => {
         coockies.remove("access_token");
         state.isConnected = false;
-        router.push('/login')
+        router.push('/login');
     });
 
+    // ROOM CREATED by server
     socket.on("room_created", (payload: any) => {
-        const roomId = (payload && payload.room) ? String(payload.room) : "";
-        if (roomId && !currentRoom.value) setRoomInUrl(roomId);
+        const roomId = payload?.room ? String(payload.room) : "";
+        if (roomId && !currentRoom.value) {
+            setRoomInUrl(roomId);
+        }
     });
 
+    // UPDATE LIST OF ROOMS
     socket.on("rooms_updated", (payload: { rooms: RoomChat[] }) => {
         roomChat.value = payload.rooms || [];
     });
 
+    // MAIN CHAT EVENT
     socket.on("chat", (payload: any) => {
         if (!payload || !payload.type) return;
 
+        // LOAD HISTORY
         if (payload.type === "history") {
-            const rows = Array.isArray(payload.items) ? payload.items : [];
-            rows.forEach((it: any) =>
-                pushMsg({ role: (it.role || "system"), text: it.text || "", ts: it.ts || Date.now(), is_image: it.is_image || false })
+            const rows: any[] = Array.isArray(payload.items) ? payload.items : [];
+
+            state.items = []; // clear existing
+
+            rows.forEach(it =>
+                pushMsg({
+                    role: it.role || "system",
+                    text: it.text || "",
+                    ts: it.ts || Date.now(),
+                    is_image: it.is_image || false,
+                })
             );
+
             return;
         }
 
+        // CLEAR SYSTEM CHAT FIRST TIME
         if (payload.type === "system_clear") {
             state.items = state.items.filter(m => m.role !== "system");
             return;
         }
 
-        pushMsg({ role: payload.type, text: payload.text || "", ts: payload.ts || Date.now(), is_image: payload.is_image });
+        // NORMAL MESSAGE (user/assistant/system)
+        pushMsg({
+            role: payload.type,
+            text: payload.text || "",
+            ts: payload.ts || Date.now(),
+            is_image: payload.is_image || false,
+        });
     });
 }
 
@@ -103,7 +129,12 @@ function unbindEvents() {
 function onSubmit() {
     const t = text.value.trim();
     if (!t || !isConnected.value) return;
-    socket.emit("chat", { text: t, room: currentRoom.value || undefined });
+
+    socket.emit("chat", {
+        text: t,
+        room: currentRoom.value || undefined
+    });
+
     text.value = "";
 }
 
@@ -114,6 +145,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
     unbindEvents();
 });
+
 </script>
 
 
