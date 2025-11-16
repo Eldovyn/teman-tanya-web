@@ -11,8 +11,7 @@ import {
     SidebarFooter,
 } from "@/components/ui/sidebar"
 import Separator from "./ui/separator/Separator.vue";
-import { BxSolidExit } from 'vue-icons-lib/bx'
-import { BxSolidChat } from 'vue-icons-lib/bx'
+import { BxSolidExit, BxSolidChat } from 'vue-icons-lib/bx'
 import { useCookies } from "@/composables/useCookies";
 import { ref, watch } from "vue";
 import { useGetAllRoom } from "@/services/room/useGetAllRoom";
@@ -73,6 +72,7 @@ const items = [
                 <Separator />
                 <SidebarGroupContent class="pt-5 pb-5">
                     <SidebarMenu>
+                        <SidebarGroupLabel>Room Chat</SidebarGroupLabel>
                         <SidebarMenuItem v-for="item in roomChat" :key="item.title">
                             <SidebarMenuButton asChild>
                                 <a :href="`?room=${item.title}`" class="flex gap-5">
