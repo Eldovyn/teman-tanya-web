@@ -16,6 +16,19 @@ import { useCookies } from "@/composables/useCookies";
 import { ref, watch } from "vue";
 import { useGetAllRoom } from "@/services/room/useGetAllRoom";
 import { useRouter } from "vue-router";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 const router = useRouter();
 
@@ -23,6 +36,8 @@ const roomChat = ref<RoomChat[]>([]);
 
 const cookies = useCookies();
 const accessToken = cookies.get("access_token") || "";
+
+const userMe = cookies.get("me-data");
 
 const { data: dataAllRoom } = useGetAllRoom(accessToken);
 
@@ -76,7 +91,16 @@ const items = [
                         <SidebarMenuItem v-for="item in roomChat" :key="item.title">
                             <SidebarMenuButton asChild>
                                 <a :href="`?room=${item.title}`" class="flex gap-5">
-                                    <span>{{ item.title }}</span>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger class="min-w-[30ch] max-w-[30ch] truncate">
+                                                {{ item.title }}
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{{ item.title }}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
                                 </a>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -84,11 +108,27 @@ const items = [
                 </SidebarGroupContent>
             </SidebarGroup>
         </SidebarContent>
+        <Separator class="w-[95%]! mx-auto" />
         <SidebarFooter>
-            <div class="flex gap-5 cursor-pointer" @click="onLogout">
-                <BxSolidExit class="w-6 h-6" />
-                Sign Out
-            </div>
+            <DropdownMenu>
+                <DropdownMenuTrigger class="flex flex-row gap-5 cursor-pointer">
+                    <Avatar>
+                        <AvatarImage :src="userMe?.data?.avatar" />
+                    </Avatar>
+                    <div class="flex flex-col justify-end!">
+                        <p class="text-sm text-start font-semibold">{{ userMe?.data?.username }}</p>
+                        <p class="text-xs text-muted-foreground">
+                            {{ userMe?.data?.email }}
+                        </p>
+                    </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent class="translate-y-[-3%] shadow-none w-[220px]! min-w-0!">
+                    <DropdownMenuItem @click="onLogout" class="cursor-pointer">
+                        <BxSolidExit class="w-4 h-4 me-2" />
+                        <span>Logout</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </SidebarFooter>
     </Sidebar>
 </template>
