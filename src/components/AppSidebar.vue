@@ -16,6 +16,9 @@ import { BxSolidChat } from 'vue-icons-lib/bx'
 import { useCookies } from "@/composables/useCookies";
 import { ref, watch } from "vue";
 import { useGetAllRoom } from "@/services/room/useGetAllRoom";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const roomChat = ref<RoomChat[]>([]);
 
@@ -31,6 +34,13 @@ watch(
     },
     { immediate: true }
 );
+
+const onLogout = () => {
+    cookies.remove("access_token");
+    cookies.remove("me-data");
+    cookies.remove("me-etag");
+    router.push("/login");
+};
 
 
 const items = [
@@ -75,7 +85,7 @@ const items = [
             </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
-            <div class="flex gap-5 cursor-pointer">
+            <div class="flex gap-5 cursor-pointer" @click="onLogout">
                 <BxSolidExit class="w-6 h-6" />
                 Sign Out
             </div>
