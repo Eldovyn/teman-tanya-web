@@ -115,9 +115,9 @@ onBeforeUnmount(() => {
 
 
 <template>
-    <div class="h-screen w-full flex flex-col gap-10 justify-center items-center">
-        <main ref="listRef" class="overflow-y-auto p-4 space-y-3" role="log" aria-live="polite" aria-atomic="false"
-            aria-label="Riwayat percakapan">
+    <div class="min-h-[70vh] w-full flex flex-col gap-10 justify-center items-center translate-y-[20%]">
+        <main ref="listRef" class="overflow-y-auto p-4 space-y-3 max-h-[65vh]" role="log" aria-live="polite"
+            aria-atomic="false" aria-label="Riwayat percakapan">
             <div v-for="(m, i) in items" :key="i" class="rounded-md w-212 px-4 py-3" :class="{
                 'border': m.role === 'assistant' || m.role === 'user',
                 '': m.role === 'system',
@@ -133,7 +133,7 @@ onBeforeUnmount(() => {
         prose prose-invert max-w-none wrap-break-word
         prose-p:my-2 prose-headings:my-3 prose-li:my-1
         prose-pre:whitespace-pre-wrap prose-pre:text-sm
-        prose-code:before:content-[''] prose-code:after:content-['']
+        prose-code:before:content-[''] prose-code:after:content-[''] 
       " />
                 </div>
                 <div v-else>
@@ -155,3 +155,5 @@ onBeforeUnmount(() => {
         </form>
     </div>
 </template>
+
+<style scoped></style>
