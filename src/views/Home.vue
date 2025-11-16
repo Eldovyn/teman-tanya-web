@@ -15,8 +15,6 @@ const coockies = useCookies()
 
 const accessToken = coockies.get("access_token") || "";
 
-type Msg = { role: "system" | "assistant" | "user"; text: string; ts?: number };
-
 const qs = new URLSearchParams(window.location.search);
 const initialRoom = (qs.get("room") || "").trim();
 
@@ -84,7 +82,7 @@ function bindEvents() {
         if (payload.type === "history") {
             const rows = Array.isArray(payload.items) ? payload.items : [];
             rows.forEach((it: any) =>
-                pushMsg({ role: (it.role || "system"), text: it.text || "", ts: it.ts || Date.now() })
+                pushMsg({ role: (it.role || "system"), text: it.text || "", ts: it.ts || Date.now(), is_image: it.is_image || false })
             );
             return;
         }
@@ -94,7 +92,7 @@ function bindEvents() {
             return;
         }
 
-        pushMsg({ role: payload.type, text: payload.text || "", ts: payload.ts || Date.now() });
+        pushMsg({ role: payload.type, text: payload.text || "", ts: payload.ts || Date.now(), is_image: payload.is_image });
     });
 }
 
@@ -123,7 +121,8 @@ onBeforeUnmount(() => {
     <div class="min-h-[70vh] w-full flex flex-col gap-10 justify-center items-center translate-y-[20%]">
         <main ref="listRef" class="overflow-y-auto p-4 space-y-3 max-h-[65vh]" role="log" aria-live="polite"
             aria-atomic="false" aria-label="Riwayat percakapan">
-            <div v-for="(m, i) in items" :key="i" class="rounded-md w-212 px-4 py-3" :class="{
+            <div v-for="(m, i) in items" :key="i" :class="{
+                'rounded-md w-212 px-4 py-3': true,
                 'border': m.role === 'assistant' || m.role === 'user',
                 '': m.role === 'system',
             }">
@@ -134,18 +133,24 @@ onBeforeUnmount(() => {
                         <span>{{ formatTs(m.ts) }}</span>
                     </div>
 
-                    <VueMarkdown :markdown="m.text" :remark-plugins="[remarkGfm]" class="
-        prose prose-invert max-w-none wrap-break-word
-        prose-p:my-2 prose-headings:my-3 prose-li:my-1
-        prose-pre:whitespace-pre-wrap prose-pre:text-sm
-        prose-code:before:content-[''] prose-code:after:content-[''] 
-      " />
+                    <div v-if="m.is_image" class="my-2">
+                        <img :src="m.text" alt="AI generated image" class="max-w-full mx-auto rounded-md" />
+                    </div>
+
+                    <VueMarkdown v-else :markdown="m.text" :remark-plugins="[remarkGfm]" class="
+          prose prose-invert max-w-none wrap-break-word
+          prose-p:my-2 prose-headings:my-3 prose-li:my-1
+          prose-pre:whitespace-pre-wrap prose-pre:text-sm
+          prose-code:before:content-[''] prose-code:after:content-[''] 
+        " />
                 </div>
+
                 <div v-else>
                     <h1 class="text-center text-2xl font-bold">{{ m.text }}</h1>
                 </div>
             </div>
         </main>
+
 
         <form class="w-full flex justify-center items-center">
             <div class="flex w-full justify-center items-center gap-10">

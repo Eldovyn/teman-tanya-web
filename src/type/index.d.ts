@@ -81,3 +81,5 @@ declare interface GetAllRoomResponse {
     message: string;
     data: RoomChat[] | [];
 }
+
+declare type Msg = { role: "system" | "assistant" | "user"; text: string; ts?: number, is_image?: false };
