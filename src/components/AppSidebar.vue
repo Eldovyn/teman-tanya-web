@@ -14,9 +14,7 @@ import Separator from "./ui/separator/Separator.vue";
 import { BxSolidExit } from 'vue-icons-lib/bx'
 import { BxSolidChat } from 'vue-icons-lib/bx'
 import { useCookies } from "@/composables/useCookies";
-import { onMounted, onBeforeUnmount, ref, watch } from "vue";
-import { useRoute } from "vue-router";
-import { io } from "socket.io-client";
+import { ref, watch } from "vue";
 import { useGetAllRoom } from "@/services/room/useGetAllRoom";
 
 const roomChat = ref<RoomChat[]>([]);
@@ -30,40 +28,10 @@ watch(
     () => dataAllRoom.value,
     (val) => {
         roomChat.value = val?.data || [];
-        console.log("dataAllRoom updated:", val?.data);
     },
     { immediate: true }
 );
 
-const router = useRoute();
-
-const initialRoom = router.query.room || "";
-
-const socket = io(`${import.meta.env.VITE_API_URL}/chat-bot`, {
-    path: "/socket.io",
-    autoConnect: true,
-    auth: {
-        token: accessToken,
-        room: initialRoom,
-    },
-});
-if (!socket) {
-    throw new Error('Socket not provided');
-}
-
-onMounted(() => {
-    socket.on('connect', () => {
-        console.log('socket connected (setup)');
-    });
-    socket.on('rooms_updated', (data: RoomChat) => {
-        roomChat.value = [data];
-    });
-});
-
-onBeforeUnmount(() => {
-    socket.off('connect');
-    socket.off('validation');
-});
 
 const items = [
     {

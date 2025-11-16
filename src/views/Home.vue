@@ -73,11 +73,6 @@ function bindEvents() {
         if (roomId && !currentRoom.value) setRoomInUrl(roomId);
     });
 
-    socket.on("rooms_updated", (payload) => {
-        console.log("rooms_updated:", payload.rooms);
-        // update sidebar / list room di UI
-    });
-
     socket.on("chat", (payload: any) => {
         if (!payload || !payload.type) return;
 
