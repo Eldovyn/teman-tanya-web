@@ -185,7 +185,7 @@ const onSubmit = () => {
 <template>
     <section class="login h-screen bg-[#f5f5f5] flex justify-center items-center">
         <div class="flex flex-col xl:w-[30%] lg:w-[50%] md:w-[50%] w-[80%] p-10 bg-white rounded-md text-black">
-            <h1 class="text-3xl font-bold text-center">Welcome back to Teman Tanya</h1>
+            <h1 class="text-2xl font-bold text-center">Welcome back to Teman Tanya</h1>
             <p class="text-sm text-center">Sign in to your account</p>
             <br>
             <br>
