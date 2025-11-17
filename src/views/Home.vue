@@ -128,8 +128,18 @@ const inputChatBot = reactive<ChatInput>({
     file: undefined,
 })
 
-const accept = 'image/*,application/pdf'
+const accept = 'application/pdf'
 const fileInput = ref<HTMLInputElement | null>(null)
+const filePreview = ref<string>('')
+
+function removeFile() {
+    inputChatBot.file = undefined
+    filePreview.value = ''
+}
+
+function isImageFile(file: File) {
+    return file.type.startsWith('image/')
+}
 
 function openFilePicker() {
     fileInput.value?.click()
@@ -300,31 +310,46 @@ onMounted(() => nextTick(() => centerCaret()));
 
         <form class="w-full flex justify-center items-center" @submit.prevent="onSubmit">
             <div class="flex w-full justify-center items-center">
-                <div class="relative w-[60%]">
-                    <button type="button"
-                        class="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        aria-label="Attach file" @click="openFilePicker">
-                        <span class="text-lg font-bold select-none">+</span>
-                    </button>
+                <div class="flex w-full justify-center items-center">
+                    <div class="relative w-[60%]">
 
-                    <span v-show="!inputChatBot.text"
-                        class="absolute left-14 top-1/2 -translate-y-2.5 pointer-events-none text-gray-400 select-none"
-                        aria-hidden="true">
-                        Ask me anything...
-                    </span>
+                        <div v-if="inputChatBot.file"
+                            class="mb-2 flex items-center gap-2 p-2 border rounded-md bg-gray-50">
+                            <template v-if="isImageFile(inputChatBot.file)">
+                                <img :src="filePreview" alt="preview" class="h-10 w-10 object-cover rounded" />
+                            </template>
+                            <span class="truncate">{{ inputChatBot.file.name }}</span>
+                            <button type="button" class="ml-auto text-red-500 hover:text-red-700" @click="removeFile"
+                                aria-label="Remove file">
+                                ×
+                            </button>
+                        </div>
 
-                    <textarea ref="textareaRef" v-model="inputChatBot.text" placeholder=""
-                        class="w-full block resize-none min-h-14 max-h-40 pr-14 pl-14 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-shadow"
-                        :rows="2" @focus="onFocusTextarea" @input="onInputTextarea" @blur="onBlurTextarea" />
+                        <button type="button"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            aria-label="Attach file" @click="openFilePicker">
+                            <span class="text-lg font-bold select-none">+</span>
+                        </button>
 
-                    <button type="button"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        aria-label="Send" @click="onSubmit">
-                        <BxSolidSend class="w-5 h-5" />
-                    </button>
+                        <span v-show="!inputChatBot.text"
+                            class="absolute left-14 top-1/2 -translate-y-2.5 pointer-events-none text-gray-400 select-none"
+                            aria-hidden="true">
+                            Ask me anything...
+                        </span>
 
-                    <input ref="fileInput" type="file" class="hidden" @change="onFileChange" :multiple="false"
-                        :accept="accept" />
+                        <textarea ref="textareaRef" v-model="inputChatBot.text" placeholder=""
+                            class="w-full block resize-none min-h-14 max-h-40 pr-14 pl-14 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-shadow"
+                            :rows="2" @focus="onFocusTextarea" @input="onInputTextarea" @blur="onBlurTextarea" />
+
+                        <button type="button"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            aria-label="Send" @click="onSubmit">
+                            <BxSolidSend class="w-5 h-5" />
+                        </button>
+
+                        <input ref="fileInput" type="file" class="hidden" @change="onFileChange" :multiple="false"
+                            :accept="accept" />
+                    </div>
                 </div>
             </div>
         </form>
