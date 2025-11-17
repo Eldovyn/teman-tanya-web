@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Textarea from '@/components/ui/textarea/Textarea.vue';
 import { io } from "socket.io-client";
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { VueMarkdown } from "@crazydos/vue-markdown";
@@ -8,6 +7,11 @@ import { BxSolidSend } from 'vue-icons-lib/bx'
 import { useCookies } from '@/composables/useCookies';
 import { useRouter } from 'vue-router';
 import { roomChat } from '@/stores/roomChatStore';
+import { useMutation } from '@tanstack/vue-query';
+import { axiosInstance } from '@/lib/axios';
+import { AxiosError } from 'axios';
+
+const isSubmitting = ref(false);
 
 const router = useRouter()
 
@@ -32,7 +36,7 @@ const socket = io(NS_BASE + NAMESPACE, {
 
 const currentRoom = ref<string>(initialRoom || "");
 const state = reactive({ isConnected: false, items: [] as Msg[], socketId: "" });
-const text = ref("");
+
 const listRef = ref<HTMLElement | null>(null);
 
 const isConnected = computed(() => state.isConnected);
@@ -58,20 +62,17 @@ function setRoomInUrl(roomId: string) {
 }
 
 function bindEvents() {
-    // CONNECTED
     socket.on("connect", () => {
         state.isConnected = true;
         state.socketId = socket.id ?? "";
     });
 
-    // DISCONNECTED → auto logout
     socket.on("disconnect", () => {
         coockies.remove("access_token");
         state.isConnected = false;
         router.push('/login');
     });
 
-    // ROOM CREATED by server
     socket.on("room_created", (payload: any) => {
         const roomId = payload?.room ? String(payload.room) : "";
         if (roomId && !currentRoom.value) {
@@ -79,20 +80,17 @@ function bindEvents() {
         }
     });
 
-    // UPDATE LIST OF ROOMS
     socket.on("rooms_updated", (payload: { rooms: RoomChat[] }) => {
         roomChat.value = payload.rooms || [];
     });
 
-    // MAIN CHAT EVENT
     socket.on("chat", (payload: any) => {
         if (!payload || !payload.type) return;
 
-        // LOAD HISTORY
         if (payload.type === "history") {
             const rows: any[] = Array.isArray(payload.items) ? payload.items : [];
 
-            state.items = []; // clear existing
+            state.items = [];
 
             rows.forEach(it =>
                 pushMsg({
@@ -106,13 +104,11 @@ function bindEvents() {
             return;
         }
 
-        // CLEAR SYSTEM CHAT FIRST TIME
         if (payload.type === "system_clear") {
             state.items = state.items.filter(m => m.role !== "system");
             return;
         }
 
-        // NORMAL MESSAGE (user/assistant/system)
         pushMsg({
             role: payload.type,
             text: payload.text || "",
@@ -126,17 +122,77 @@ function unbindEvents() {
     socket.off();
 }
 
-function onSubmit() {
-    const t = text.value.trim();
-    if (!t || !isConnected.value) return;
+const inputChatBot = reactive<ChatInput>({
+    text: '',
+    room: currentRoom.value,
+    file: undefined,
+})
 
-    socket.emit("chat", {
-        text: t,
-        room: currentRoom.value || undefined
-    });
+const accept = 'image/*,application/pdf'
+const fileInput = ref<HTMLInputElement | null>(null)
 
-    text.value = "";
+function openFilePicker() {
+    fileInput.value?.click()
 }
+
+function onFileChange(e: Event) {
+    const target = e.target as HTMLInputElement | null
+    const selected = target?.files ? target.files[0] : undefined
+    if (!selected) return
+
+    inputChatBot.file = selected
+
+    if (target) target.value = ''
+}
+
+const apiChatBot = async (input: ChatInput) => {
+    const fd = new FormData();
+    fd.append("text", input.text);
+    fd.append("room", input.room);
+    if (input.file) {
+        console.log("Uploading file:", input.file);
+        fd.append("file", input.file);
+    }
+    const response = await axiosInstance.post('/chat-bot/messages', fd, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        }
+    })
+    return response.data
+}
+
+const { mutate } = useMutation({
+    mutationFn: async (input: ChatInput) => {
+        const response = apiChatBot(input)
+        return response
+    },
+    onError: async (error) => {
+        const err = error as AxiosError<ErrorResponse>;
+        console.error("ChatBot Error:", err);
+        isSubmitting.value = false;
+    },
+    onSuccess: async () => {
+        inputChatBot.text = '';
+        inputChatBot.file = undefined;
+        isSubmitting.value = false
+    },
+})
+
+const onSubmit = () => {
+    if (!isConnected.value) {
+        console.warn("Socket is not connected.");
+        return;
+    };
+    if (isSubmitting.value) return;
+
+    const trimmed = (inputChatBot.text || '').trim();
+    if (!trimmed) return;
+
+    inputChatBot.room = currentRoom.value;
+
+    isSubmitting.value = true;
+    mutate({ ...inputChatBot });
+};
 
 onMounted(() => {
     unbindEvents();
@@ -145,6 +201,64 @@ onMounted(() => {
 onBeforeUnmount(() => {
     unbindEvents();
 });
+
+const textareaRef = ref<HTMLTextAreaElement | null>(null);
+
+let defaultPaddingTop: number | null = null;
+let defaultPaddingBottom: number | null = null;
+
+function getPxNumber(value: string | null): number {
+    return value ? parseFloat(value.replace("px", "")) : 0;
+}
+
+const ADDITIONAL_OFFSET = 5;
+
+function centerCaret(): void {
+    const ta = textareaRef.value;
+    if (!ta) return;
+
+    const style = getComputedStyle(ta);
+
+    if (defaultPaddingTop === null) {
+        defaultPaddingTop = getPxNumber(style.paddingTop);
+        defaultPaddingBottom = getPxNumber(style.paddingBottom);
+    }
+
+    if (inputChatBot.text) {
+        ta.style.paddingTop = `${defaultPaddingTop}px`;
+        ta.style.paddingBottom = `${defaultPaddingBottom}px`;
+        return;
+    }
+
+    const height = ta.clientHeight;
+
+    let lineHeight: number;
+    if (!style.lineHeight || style.lineHeight === "normal") {
+        const fontSize = getPxNumber(style.fontSize) || 16;
+        lineHeight = fontSize * 1.2;
+    } else {
+        lineHeight = getPxNumber(style.lineHeight);
+    }
+
+    const offset = Math.max(0, (height - lineHeight) / 2 + ADDITIONAL_OFFSET);
+    ta.style.paddingTop = `${offset}px`;
+    ta.style.paddingBottom = `${defaultPaddingBottom}px`;
+}
+
+
+function onFocusTextarea(): void {
+    nextTick(() => centerCaret());
+}
+
+function onInputTextarea(): void {
+    nextTick(() => centerCaret());
+}
+
+function onBlurTextarea(): void {
+    nextTick(() => centerCaret());
+}
+
+onMounted(() => nextTick(() => centerCaret()));
 
 </script>
 
@@ -184,14 +298,33 @@ onBeforeUnmount(() => {
         </main>
 
 
-        <form class="w-full flex justify-center items-center">
-            <div class="flex w-full justify-center items-center gap-10">
+        <form class="w-full flex justify-center items-center" @submit.prevent="onSubmit">
+            <div class="flex w-full justify-center items-center">
                 <div class="relative w-[60%]">
-                    <Textarea class="w-full pr-12" placeholder="ask me anything" v-model="text" />
-                    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 z-10 pointer-events-auto"
+                    <button type="button"
+                        class="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        aria-label="Attach file" @click="openFilePicker">
+                        <span class="text-lg font-bold select-none">+</span>
+                    </button>
+
+                    <span v-show="!inputChatBot.text"
+                        class="absolute left-14 top-1/2 -translate-y-2.5 pointer-events-none text-gray-400 select-none"
+                        aria-hidden="true">
+                        Ask me anything...
+                    </span>
+
+                    <textarea ref="textareaRef" v-model="inputChatBot.text" placeholder=""
+                        class="w-full block resize-none min-h-14 max-h-40 pr-14 pl-14 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-shadow"
+                        :rows="2" @focus="onFocusTextarea" @input="onInputTextarea" @blur="onBlurTextarea" />
+
+                    <button type="button"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         aria-label="Send" @click="onSubmit">
                         <BxSolidSend class="w-5 h-5" />
                     </button>
+
+                    <input ref="fileInput" type="file" class="hidden" @change="onFileChange" :multiple="false"
+                        :accept="accept" />
                 </div>
             </div>
         </form>

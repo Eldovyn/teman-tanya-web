@@ -31,6 +31,12 @@ declare interface AccountActiveResponse {
     }
 }
 
+declare interface ChatInput {
+    text: string;
+    room: string;
+    file?: File;
+}
+
 declare interface LoginInput {
     email: string;
     password: string;
