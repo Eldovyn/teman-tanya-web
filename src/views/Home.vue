@@ -10,6 +10,7 @@ import { roomChat } from '@/stores/roomChatStore';
 import { useMutation } from '@tanstack/vue-query';
 import { axiosInstance } from '@/lib/axios';
 import { AxiosError } from 'axios';
+import Spinner from "@/components/ui/spinner/Spinner.vue";
 
 const isSubmitting = ref(false);
 
@@ -160,7 +161,6 @@ const apiChatBot = async (input: ChatInput) => {
     fd.append("text", input.text);
     fd.append("room", input.room);
     if (input.file) {
-        console.log("Uploading file:", input.file);
         fd.append("file", input.file);
     }
     const response = await axiosInstance.post('/chat-bot/messages', fd, {
@@ -192,16 +192,24 @@ const onSubmit = () => {
     if (!isConnected.value) {
         console.warn("Socket is not connected.");
         return;
-    };
+    }
     if (isSubmitting.value) return;
 
     const trimmed = (inputChatBot.text || '').trim();
-    if (!trimmed) return;
+    if (!trimmed && !inputChatBot.file) return;
 
-    inputChatBot.room = currentRoom.value;
+    const payload: ChatInput = {
+        text: inputChatBot.text,
+        file: inputChatBot.file,
+        room: currentRoom.value,
+    };
+
+    inputChatBot.text = '';
+    inputChatBot.file = undefined;
 
     isSubmitting.value = true;
-    mutate({ ...inputChatBot });
+
+    mutate(payload);
 };
 
 onMounted(() => {
@@ -344,7 +352,8 @@ onMounted(() => nextTick(() => centerCaret()));
                         <button type="button"
                             class="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             aria-label="Send" @click="onSubmit">
-                            <BxSolidSend class="w-5 h-5" />
+                            <BxSolidSend class="w-5 h-5" v-if="!isSubmitting" />
+                            <Spinner v-else class="w-5 h-5" />
                         </button>
 
                         <input ref="fileInput" type="file" class="hidden" @change="onFileChange" :multiple="false"
