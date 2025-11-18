@@ -263,6 +263,14 @@ function centerCaret(): void {
     ta.style.paddingBottom = `${defaultPaddingBottom}px`;
 }
 
+function onNewLine(event: KeyboardEvent) {
+    // Shift + Enter -> biarkan buat newline
+    // Bisa custom logic jika butuh
+    // Contohnya:
+    // event.preventDefault();
+    // inputText.value += '\n';
+}
+
 
 function onFocusTextarea(): void {
     nextTick(() => centerCaret());
@@ -347,7 +355,8 @@ onMounted(() => nextTick(() => centerCaret()));
 
                         <textarea ref="textareaRef" v-model="inputChatBot.text" placeholder=""
                             class="w-full block resize-none min-h-14 max-h-40 pr-14 pl-14 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-shadow"
-                            :rows="2" @focus="onFocusTextarea" @input="onInputTextarea" @blur="onBlurTextarea" />
+                            :rows="3" @focus="onFocusTextarea" @input="onInputTextarea" @blur="onBlurTextarea"
+                            @keydown.enter.exact.prevent="onSubmit" @keydown.enter.shift="onNewLine" />
 
                         <button type="button"
                             class="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
