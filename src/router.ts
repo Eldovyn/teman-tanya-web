@@ -46,31 +46,6 @@ router.beforeEach(async (to) => {
         return true
     }
 
-    if (to.path === '/' && hasToken(accessToken)) {
-        try {
-            const { response } = await userService.getUserMe(accessToken || '', clientETag)
-
-            if (response.status === 200) {
-                const newETag = response.headers['etag']
-                if (newETag) {
-                    cookies.set('me-etag', newETag)
-                    cookies.set('me-data', JSON.stringify(response.data))
-                }
-                return true
-            }
-
-            if (response.status === 304) return true
-
-            cookies.remove('access_token')
-            cookies.remove('me-etag')
-            return { path: '/login' }
-        } catch {
-            cookies.remove('access_token')
-            cookies.remove('me-etag')
-            return { path: '/login' }
-        }
-    }
-
     return true
 })
 

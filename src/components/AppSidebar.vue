@@ -13,7 +13,7 @@ import {
 import Separator from "./ui/separator/Separator.vue";
 import { BxSolidExit, BxSolidChat, BxRegularUserCircle } from 'vue-icons-lib/bx'
 import { useCookies } from "@/composables/useCookies";
-import { ref, watch } from "vue";
+import { watch } from "vue";
 import { useGetAllRoom } from "@/services/room/useGetAllRoom";
 import { useRouter } from "vue-router";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
@@ -72,6 +72,13 @@ const onClearRooms = async () => {
     }
 };
 
+const onDeleteRoom = async (room: string) => {
+    const { response } = await RoomService.deleteRoom(accessToken, room);
+    if (response.status === 201) {
+        router.go(0);
+    }
+};
+
 
 const items = [
     {
@@ -105,21 +112,26 @@ const items = [
                     <SidebarMenu>
                         <SidebarGroupLabel>Room Chat</SidebarGroupLabel>
                         <SidebarMenuItem v-for="item in roomChat" :key="item.title">
-                            <SidebarMenuButton asChild>
-                                <a :href="`?room=${item.room}`" class="flex gap-5">
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger class="min-w-[30ch] max-w-[30ch] truncate">
-                                                {{ item.title }}
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{{ item.title }}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </a>
-                            </SidebarMenuButton>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger as-child>
+                                        <SidebarMenuButton asChild>
+                                            <a :href="`?room=${item.room}`" class="flex items-center gap-2 w-full">
+                                                <span class="min-w-0 flex-1 truncate">
+                                                    {{ item.title }}
+                                                </span>
+                                                <AiOutlineDelete class="w-4 h-4 shrink-0"
+                                                    @click="onDeleteRoom(item.room)" />
+                                            </a>
+                                        </SidebarMenuButton>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{{ item.title }}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </SidebarMenuItem>
+
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>
