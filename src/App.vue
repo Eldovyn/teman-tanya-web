@@ -2,22 +2,28 @@
 import AppSidebar from '@/components/AppSidebar.vue'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { useRoute } from 'vue-router'
-import { ref } from "vue"
-import { Toaster } from '@/components/ui/sonner'
-import 'vue-sonner/style.css'
-
-const isLogin = ref(false)
+import { computed } from 'vue'
 
 const route = useRoute()
+const hasSidebar = computed(() => route.meta.sidebar === true)
 </script>
 
 <template>
-  <Toaster />
-  <SidebarProvider>
-    <AppSidebar v-if="route.meta.sidebar && isLogin" />
-    <main class="flex-1">
-      <SidebarTrigger v-if="route.meta.sidebar && isLogin" />
-      <RouterView />
-    </main>
-  </SidebarProvider>
+  <RouterView v-slot="{ Component }">
+    <template v-if="hasSidebar">
+      <SidebarProvider>
+        <AppSidebar />
+        <main class="flex-1">
+          <SidebarTrigger />
+          <component :is="Component" />
+        </main>
+      </SidebarProvider>
+    </template>
+
+    <template v-else>
+      <main>
+        <component :is="Component" />
+      </main>
+    </template>
+  </RouterView>
 </template>

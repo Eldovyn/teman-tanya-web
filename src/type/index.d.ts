@@ -31,6 +31,12 @@ declare interface AccountActiveResponse {
     }
 }
 
+declare interface ChatInput {
+    text: string;
+    room: string;
+    file?: File;
+}
+
 declare interface LoginInput {
     email: string;
     password: string;
@@ -67,3 +73,19 @@ declare interface ErrorResponse {
         [field: string]: string[];
     };
 }
+
+declare interface RoomChat {
+    id: string;
+    created_at: Date;
+    updated_at: Date;
+    deleted_at: Date | null;
+    title: string;
+    room: string;
+}
+
+declare interface GetAllRoomResponse {
+    message: string;
+    data: RoomChat[] | [];
+}
+
+declare type Msg = { role: "system" | "assistant" | "user"; text: string; ts?: number, is_image?: false };
